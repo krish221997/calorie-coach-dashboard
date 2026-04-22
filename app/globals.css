@@ -168,4 +168,17 @@
   ::selection {
     background-color: hsl(var(--one-yellow) / 0.35);
   }
+
+  /* Direction C — mission-control animations */
+  @keyframes ccDrift {
+    0%   { transform: translate(0, 0); }
+    50%  { transform: translate(-40px, 20px); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes ccBlink {
+    50% { opacity: 0.3; }
+  }
+  @keyframes ccPulse {
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
 }

@@ -36,9 +36,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${dmSans.variable} ${dmMono.variable} ${dmSerif.variable} h-full antialiased`}
+      className={`dark ${dmSans.variable} ${dmMono.variable} ${dmSerif.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-sans">{children}</body>
+      <body className="min-h-full bg-background font-sans text-foreground">{children}</body>
     </html>
   );
 }
