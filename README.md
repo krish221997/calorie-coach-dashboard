@@ -118,13 +118,8 @@ That's it. Send a meal to your bot on Telegram, and the dashboard will show the 
 |---|---|---|
 | `ONE_SECRET` | Bearer for One API — get from app.withone.ai/settings | yes |
 | `NOTION_MEALS_DATA_SOURCE_ID` | Notion data source ID of the Meals DB | yes |
-| `NOTION_TARGETS_DATA_SOURCE_ID` | Notion data source ID of the Targets DB | optional (falls back to `DAILY_*_TARGET` envs) |
-| `NEXT_PUBLIC_TELEGRAM_BOT_HANDLE` | `@your_bot` shown on the idle screen | optional |
-| `ONE_API_BASE` | Override the One API base URL (default `https://api.withone.ai/v1`) | no |
-| `DAILY_KCAL_TARGET` | Fallback daily calorie target (default 2200) | no |
-| `DAILY_PROTEIN_TARGET` | Fallback daily protein target in grams (default 140) | no |
-| `DAILY_FAT_TARGET` | Fallback daily fat target in grams (default 70) | no |
-| `DAILY_CARBS_TARGET` | Fallback daily carb target in grams (default 240) | no |
+| `NOTION_TARGETS_DATA_SOURCE_ID` | Notion data source ID of the Targets DB. Required for the YES/NO flow — the `apply-targets` skill reads/writes the Pending fields on the active row. | yes |
+| `NEXT_PUBLIC_TELEGRAM_BOT_HANDLE` | `@your_bot` shown on the station screen's "how to begin" panel | optional |
 
 ## Architecture
 
