@@ -104,7 +104,10 @@ At [app.withone.ai](https://app.withone.ai):
 
 - **Connections** — connect Notion, Gmail, Deepgram. Attach all three to the agent.
 - **Channels** — connect a Telegram bot.
-- **Skills** — paste the three files from `skills/` into the skills panel. **Before pasting**, find-and-replace `<NOTION_MEALS_DATA_SOURCE_ID>` and `<NOTION_TARGETS_DATA_SOURCE_ID>` in `weekly-recap.md` and `apply-targets.md` with your actual data source IDs from step 1.
+- **Skills** — paste the three files from `skills/` into the skills panel. **Before pasting**, find-and-replace these placeholders in each skill file:
+  - `<NOTION_MEALS_DATA_SOURCE_ID>` → your Meals data source ID from step 1 (in `meal-logger.md` and `weekly-recap.md`)
+  - `<NOTION_TARGETS_DATA_SOURCE_ID>` → your Targets data source ID from step 1 (in `weekly-recap.md` and `apply-targets.md`)
+  - `https://calorie-coach-dashboard.vercel.app` → your own deployed dashboard URL (in `weekly-recap.md`, line ~293, inside the EMAIL_TEMPLATE's `<a href>`). This is the URL the "OPEN MISSION CONTROL →" button in the email points to. If you skip this step, the email will link to the maintainer's deployment instead of yours.
 - **Schedules** — add the five rows listed in `skills/README.md`.
 
 That's it. Send a meal to your bot on Telegram, and the dashboard will show the row within seconds.
