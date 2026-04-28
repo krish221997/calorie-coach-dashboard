@@ -1,23 +1,28 @@
-# Calorie Coach — dashboard
+# Calorie Coach
 
-A read-only Next.js 16 + React 19 dashboard that renders the meals your
-Telegram calorie-coach agent writes to Notion. Dark mission-control
-aesthetic (Instrument Serif + JetBrains Mono + Inter) ported from the
-Claude Design handoff bundle.
+A personal calorie coach built end-to-end on **[One](https://withone.ai)** — the agent platform that handles the scheduler, the Telegram channel, the LLM calls, and every integration in one place.
 
-Everything flows through One's passthrough API using a single
-`ONE_SECRET` bearer, so no per-platform credentials live in this app.
+You message a Telegram bot with what you ate. The agent estimates macros, writes a row to your Notion database, and replies in a line. Every Sunday at 8 PM the agent reads your last 7 days, sends a coach letter on Telegram, mails you a designed HTML recap, and waits for a YES/NO reply that updates your goals. The dashboard in this repo is just the read side — six screens of dark mission-control UI rendering whatever the agent has written to Notion.
 
-## What you get
+## Why this is built on One
 
-Two halves:
+The whole point of this build is what *isn't* in the repo:
 
-1. **The dashboard** (this repo's `app/`, `components/`, etc.) — six
-   screens that read your meal log out of Notion and visualize it.
-2. **The agent skills** (`skills/`) — three Markdown files that paste
-   into a One agent's skill panel to make the loop work end to end.
+- **No backend code.** No webhook server, no Lambda, no message queue, no cron service.
+- **No infrastructure.** No Docker, no Kubernetes, no Render/Fly/Railway deploy.
+- **No proprietary database.** Your meals live in your own Notion, not in some vendor lock-in datastore.
 
-The dashboard is read-only. All writes happen through the agent.
+One handles all of it natively. The agent owns its scheduler (5 cron rows). The agent owns the Telegram channel (no relay needed). The agent owns the LLM calls (configure once, no SDK plumbing). The agent owns the integrations (Notion, Gmail, Deepgram — all native One connections). The agent's "skills" are three Markdown files pasted into the panel.
+
+This dashboard reads from Notion via One's passthrough API using a single `ONE_SECRET` bearer, so no per-platform credentials live in this app either.
+
+## What's in this repo
+
+| Part | Where | What |
+|---|---|---|
+| **The agent skills** | `skills/` | Three Markdown files that paste into a One agent's Skills panel — meal-logger, weekly-recap, apply-targets. This is the actual brain. |
+| **The dashboard** | `app/`, `components/`, `lib/`, etc. | A read-only Next.js 16 + React 19 site that renders meals out of Notion. Dark mission-control aesthetic (Instrument Serif + JetBrains Mono + Inter). |
+| **Notion DB shapes** | This README, below | The exact schema you need on Meals + Targets so the skills can write to them. |
 
 ## Six screens
 
