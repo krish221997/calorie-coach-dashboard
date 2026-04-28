@@ -1,88 +1,175 @@
 # Calorie Coach — dashboard
 
-A Next.js 16 + Tailwind v4 dashboard that reads the meals your Telegram
-calorie-coach agent writes to Notion. Built on One's design system
-(warm ivory + charcoal palette, DM Sans / DM Serif / DM Mono).
+A read-only Next.js 16 + React 19 dashboard that renders the meals your
+Telegram calorie-coach agent writes to Notion. Dark mission-control
+aesthetic (Instrument Serif + JetBrains Mono + Inter) ported from the
+Claude Design handoff bundle.
 
 Everything flows through One's passthrough API using a single
 `ONE_SECRET` bearer, so no per-platform credentials live in this app.
 
-## What it shows
+## What you get
 
-- Today's totals (calories, protein, fat, carbs) with progress bars
-  toward daily targets
-- A chat-style feed of today's meals, styled like a conversation with
-  the coach (user bubble on the right, coach summary on the left)
-- 30-day trend chart (calories + protein)
-- A compact "recent meals" sidebar for the days before today
-- Connection health indicator for One and Notion
+Two halves:
+
+1. **The dashboard** (this repo's `app/`, `components/`, etc.) — six
+   screens that read your meal log out of Notion and visualize it.
+2. **The agent skills** (`skills/`) — three Markdown files that paste
+   into a One agent's skill panel to make the loop work end to end.
+
+The dashboard is read-only. All writes happen through the agent.
+
+## Six screens
+
+| Route | Screen | Purpose |
+|---|---|---|
+| `/` | **Today** | Primary kcal panel, macro ring, altitude chart, event log, input channels |
+| `/review` | **Review** | 30-day altitude profile, macro composition, anomaly log, weekday heatmap |
+| `/streaks` | **Streaks** | Apollo mission-clock, longest streak / log rate / avg meals, 90-day dot ledger |
+| `/delta` | **Delta** | This-week vs last-week metric cards, compare chart, best/worst day, narrative |
+| `/log` | **Transcript** | Filterable feed of all messages (text / photo / voice) with agent replies |
+| `/idle` | **Idle** | Empty-state when no events today; live "station active" view when there are |
+| `/meal/[id]` | **Payload detail** | Per-meal payload, classification, ingredient split, transcript, keyboard nav (←/→/Esc) |
+
+## Three skills
+
+These live in `skills/` and are documented in detail at
+[`skills/README.md`](./skills/README.md).
+
+| Skill | Trigger | What it does |
+|---|---|---|
+| `meal-logger` | User sends a Telegram message (text / photo / voice) | Parses the meal, estimates macros, writes a row to Notion Meals, replies in one short line |
+| `weekly-recap` | Sunday 8 PM IST schedule | Pulls the last 7 days, composes a coach letter, sends short version to Telegram + designed HTML to Gmail |
+| `apply-targets` | User replies to recap with `yes` / `no` / `raise protein` etc. | PATCHes the active row in Notion Targets; dashboard reflects the change on next reload |
 
 ## Setup
 
 ```bash
 cp .env.example .env.local
-# fill in ONE_SECRET + NOTION_MEALS_DATA_SOURCE_ID
+# fill in ONE_SECRET + the two NOTION_*_DATA_SOURCE_ID values
 
 npm install
 npm run dev
 # open http://localhost:3000
 ```
 
-Environment variables:
+Then paste the three skills from `skills/` into your One agent's skill
+panel. See `skills/README.md` for the schedule cron + Notion table
+schemas you'll need to set up.
+
+### Environment variables
 
 | Var | Purpose | Required |
 |---|---|---|
 | `ONE_SECRET` | Bearer for One API — get from app.withone.ai/settings | yes |
 | `NOTION_MEALS_DATA_SOURCE_ID` | Notion data source ID of the Meals DB | yes |
-| `ONE_API_BASE` | Override the One API base URL | no |
-| `DAILY_KCAL_TARGET` | Daily calorie target (default 2200) | no |
-| `DAILY_PROTEIN_TARGET` | Daily protein target in grams (default 140) | no |
-| `DAILY_FAT_TARGET` | Daily fat target in grams (default 70) | no |
-| `DAILY_CARBS_TARGET` | Daily carb target in grams (default 240) | no |
+| `NOTION_TARGETS_DATA_SOURCE_ID` | Notion data source ID of the Targets DB | optional (falls back to `DAILY_*_TARGET` envs) |
+| `NEXT_PUBLIC_TELEGRAM_BOT_HANDLE` | `@your_bot` shown on the idle screen | optional |
+| `ONE_API_BASE` | Override the One API base URL (default `https://api.withone.ai/v1`) | no |
+| `DAILY_KCAL_TARGET` | Fallback daily calorie target (default 2200) | no |
+| `DAILY_PROTEIN_TARGET` | Fallback daily protein target in grams (default 140) | no |
+| `DAILY_FAT_TARGET` | Fallback daily fat target in grams (default 70) | no |
+| `DAILY_CARBS_TARGET` | Fallback daily carb target in grams (default 240) | no |
 
 ## Architecture
 
+Strict separation of concerns. Data flows in one direction:
+
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  BROWSER ───► Next.js server route (RSC)                     │
-│                         │                                    │
-│                         │ ONE_SECRET (env)                   │
-│                         ▼                                    │
-│                  lib/one.ts                                  │
-│                  ├─ listConnections()                        │
-│                  └─ passthrough() ──► api.withone.ai/v1/     │
-│                                        passthrough/…         │
-│                         │                                    │
-│                         ▼                                    │
-│                  lib/meals.ts                                │
-│                  fetchMeals()                                │
-│                    ├─ findConnection("notion")               │
-│                    └─ passthrough →                          │
-│                       /data_sources/{id}/query               │
-└──────────────────────────────────────────────────────────────┘
+app/<route>/page.tsx                   (thin route handler, 3-5 lines)
+        │
+        ▼
+controlled-components/<feature>/       (server components — business logic)
+        │  await loadDashboardData()
+        ▼
+lib/data/{dashboard,targets}.ts        (server-side data loaders)
+        │  composes endpoints + aggregations
+        ▼
+endpoints/{meals,targets,notion,one}.ts  (HTTP layer — only place that calls api.withone.ai)
+        │
+        ▼
+api.withone.ai (One passthrough)  ──►  Notion
 ```
 
-All fetching is server-side; the browser never sees your `ONE_SECRET`.
-React Server Components render the dashboard straight from the freshest
-Notion query on every page load.
+The stateless **presentational layer** (`components/<feature>/*.tsx`)
+receives data via props and renders. Zero hook calls for business logic,
+zero direct endpoint imports.
 
-## Files
+### Directory layout
 
-- `lib/one.ts` — tiny One API client (connection list + passthrough)
-- `lib/meals.ts` — meal types + Notion row parser + daily aggregations
-- `lib/utils.ts` — `cn()` class-name helper
-- `components/ui/*` — shadcn-style primitives (Card, Badge, Progress, etc.)
-- `components/stat-card.tsx` — today's macro numbers
-- `components/meal-feed.tsx` — chat-style meal conversation
-- `components/trend-chart.tsx` — 30-day recharts line chart
-- `components/connection-banner.tsx` — env / connection error banners
-- `app/page.tsx` — the dashboard
-- `app/layout.tsx` — DM Sans / Mono / Serif fonts
+```
+app/                     Next.js App Router pages (route handlers only)
+controlled-components/   Business logic wrappers (server components)
+components/
+  ui/                    Design primitives (Panel, Kicker, LED, Telemetry, Ticks, Ambient, ConnectionBanner, tokens)
+  layout/                Shell chrome (DashboardShell, LeftRail, TopBar, ThemeProvider)
+  today/   review/   streaks/   delta/   log/   idle/   meal/
+                         Per-feature presentational components
+endpoints/               HTTP layer (the only place that calls api.withone.ai)
+hooks/ui/                useNow live tick hook
+lib/
+  constants.ts           Shared constants (Notion property names, action IDs)
+  time.ts                IST-aware formatters
+  meals-aggregations.ts  Pure aggregation functions (buildDaySeries, aggregateByDay, etc.)
+  data/                  Server-side data loaders (dashboard, targets)
+types/                   Centralized TypeScript definitions
+skills/                  Agent skill markdown files (paste into One agent panel)
+```
 
-## Design system notes
+### Layering rules
 
-Tokens are copied from One's core-ui (`styles/globals.css`) and mapped
-to Tailwind v4's `@theme` block in `app/globals.css`. The light theme
-uses the Ivory scale; the dark theme uses the Charcoal scale. Brand
-color tokens are exposed as `bg-brand-yellow`, `bg-brand-focus`,
-`bg-brand-alert`.
+- **Route handlers** (`app/<route>/page.tsx`) contain only the imported
+  controlled component and route config. No data fetching, no banner logic.
+- **Controlled components** contain business logic: they await data from
+  `lib/data/` and pass it as props to stateless screens. Never import
+  from `endpoints/*` directly.
+- **Presentational components** (`components/<feature>/*.tsx`) are stateless,
+  take data via props, and render. They may have local UI state (a filter
+  tab, a hover overlay) but never call data loaders.
+- **Endpoints** are the only place that makes HTTP calls. Everything else
+  consumes typed functions from `endpoints/*`.
+- **Types** live in `types/<feature>.ts` — never inline in component files.
+- **No component file should exceed ~300 lines.** Three of the chart
+  components (kcal-chart, compare-chart, macro-stack) are slightly over
+  due to inline tooltip subcomponents — split if you touch them.
+
+### Timezone
+
+All times are formatted in **Asia/Kolkata** regardless of where the
+Next.js server runs. See `lib/time.ts`. Day-key computation (used by
+`aggregateByDay`, `mealsForDate`, `todayKey`) also uses IST so a meal
+logged at 01:00 IST is grouped into the correct IST day, not UTC. Fork
+this and change `TZ` if you're elsewhere.
+
+### Theming
+
+Two themes (dark default, light optional) driven by CSS variables on
+`<html>`. `ThemeProvider` toggles between `.dark` and `.light` and
+persists the choice in localStorage. All colors resolve through
+`components/ui/tokens.ts` which wraps `var(--cc-*)`. Never use hex
+literals in component files.
+
+## Known limitations
+
+- **Photos aren't stored.** The agent receives photos via Telegram and
+  identifies the food via vision, but the photo itself isn't uploaded
+  anywhere. The meal detail screen shows the photo panel only when
+  `photoUrl` is set on the row, which it currently never is. To enable
+  this you'd need to add an object-storage connection (S3, Cloudinary)
+  and have the meal-logger skill upload before writing the Notion row.
+- **The ingredient breakdown is an even split** of the total macros
+  across the items the agent recognised — not real per-ingredient data.
+  The panel labels itself accordingly (`ESTIMATED SPLIT`).
+- **`localhost` CTA in the recap email won't work** when clicked from
+  another device. Deploy the dashboard (Vercel works in 5 min for a
+  Next 16 app) and update the email template's CTA URL.
+
+## Design credit
+
+UI was exported from the Claude Design handoff bundle and ported to
+React components. The six-screen mission-control aesthetic and all SVG
+charts come from that bundle.
+
+## License
+
+[MIT](./LICENSE).

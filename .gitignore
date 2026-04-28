@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# personal scratch / setup files (skill paste-ups with real Notion IDs etc.)
+/temp/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

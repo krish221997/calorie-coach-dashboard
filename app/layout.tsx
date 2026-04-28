@@ -1,32 +1,34 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Mono, DM_Serif_Display } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
-const dmMono = DM_Mono({
-  variable: "--font-dm-mono",
+const jetbrains = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500"],
 });
 
-const dmSerif = DM_Serif_Display({
-  variable: "--font-dm-serif",
+const instrument = Instrument_Serif({
+  variable: "--font-serif",
   subsets: ["latin"],
   display: "swap",
   weight: ["400"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
-  title: "Calorie Coach — dashboard",
+  title: "Calorie Coach · Station 01",
   description:
-    "Meal log dashboard powered by One + Notion. Reads what the Telegram coach agent wrote.",
+    "Mission control for meals. Reads what the Telegram coach writes to Notion, via One.",
 };
 
 export default function RootLayout({
@@ -36,9 +38,11 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark ${dmSans.variable} ${dmMono.variable} ${dmSerif.variable} h-full antialiased`}
+      className={`${inter.variable} ${jetbrains.variable} ${instrument.variable}`}
     >
-      <body className="min-h-full bg-background font-sans text-foreground">{children}</body>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
