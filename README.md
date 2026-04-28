@@ -121,83 +121,13 @@ That's it. Send a meal to your bot on Telegram, and the dashboard will show the 
 | `NOTION_TARGETS_DATA_SOURCE_ID` | Notion data source ID of the Targets DB. Required for the YES/NO flow — the `apply-targets` skill reads/writes the Pending fields on the active row. | yes |
 | `NEXT_PUBLIC_TELEGRAM_BOT_HANDLE` | `@your_bot` shown on the station screen's "how to begin" panel | optional |
 
-## Architecture
-
-Strict separation of concerns. Data flows in one direction:
-
-```
-app/<route>/page.tsx                   (thin route handler, 3-5 lines)
-        │
-        ▼
-controlled-components/<feature>/       (server components — business logic)
-        │  await loadDashboardData()
-        ▼
-lib/data/{dashboard,targets}.ts        (server-side data loaders)
-        │  composes endpoints + aggregations
-        ▼
-endpoints/{meals,targets,notion,one}.ts  (HTTP layer — only place that calls api.withone.ai)
-        │
-        ▼
-api.withone.ai (One passthrough)  ──►  Notion
-```
-
-The stateless **presentational layer** (`components/<feature>/*.tsx`)
-receives data via props and renders. Zero hook calls for business logic,
-zero direct endpoint imports.
-
-### Directory layout
-
-```
-app/                     Next.js App Router pages (route handlers only)
-controlled-components/   Business logic wrappers (server components)
-components/
-  ui/                    Design primitives (Panel, Kicker, LED, Telemetry, Ticks, Ambient, ConnectionBanner, tokens)
-  layout/                Shell chrome (DashboardShell, LeftRail, TopBar, ThemeProvider)
-  today/   review/   streaks/   delta/   log/   idle/   meal/
-                         Per-feature presentational components
-endpoints/               HTTP layer (the only place that calls api.withone.ai)
-hooks/ui/                useNow live tick hook
-lib/
-  constants.ts           Shared constants (Notion property names, action IDs)
-  time.ts                IST-aware formatters
-  meals-aggregations.ts  Pure aggregation functions (buildDaySeries, aggregateByDay, etc.)
-  data/                  Server-side data loaders (dashboard, targets)
-types/                   Centralized TypeScript definitions
-skills/                  Agent skill markdown files (paste into One agent panel)
-```
-
-### Layering rules
-
-- **Route handlers** (`app/<route>/page.tsx`) contain only the imported
-  controlled component and route config. No data fetching, no banner logic.
-- **Controlled components** contain business logic: they await data from
-  `lib/data/` and pass it as props to stateless screens. Never import
-  from `endpoints/*` directly.
-- **Presentational components** (`components/<feature>/*.tsx`) are stateless,
-  take data via props, and render. They may have local UI state (a filter
-  tab, a hover overlay) but never call data loaders.
-- **Endpoints** are the only place that makes HTTP calls. Everything else
-  consumes typed functions from `endpoints/*`.
-- **Types** live in `types/<feature>.ts` — never inline in component files.
-- **No component file should exceed ~300 lines.** Three of the chart
-  components (kcal-chart, compare-chart, macro-stack) are slightly over
-  due to inline tooltip subcomponents — split if you touch them.
-
-### Timezone
+## Timezone
 
 All times are formatted in **Asia/Kolkata** regardless of where the
 Next.js server runs. See `lib/time.ts`. Day-key computation (used by
 `aggregateByDay`, `mealsForDate`, `todayKey`) also uses IST so a meal
 logged at 01:00 IST is grouped into the correct IST day, not UTC. Fork
 this and change `TZ` if you're elsewhere.
-
-### Theming
-
-Two themes (dark default, light optional) driven by CSS variables on
-`<html>`. `ThemeProvider` toggles between `.dark` and `.light` and
-persists the choice in localStorage. All colors resolve through
-`components/ui/tokens.ts` which wraps `var(--cc-*)`. Never use hex
-literals in component files.
 
 ## Known limitations
 
@@ -209,10 +139,11 @@ literals in component files.
   and have the meal-logger skill upload before writing the Notion row.
 - **The ingredient breakdown is an even split** of the total macros
   across the items the agent recognised — not real per-ingredient data.
-  The panel labels itself accordingly (`ESTIMATED SPLIT`).
-- **`localhost` CTA in the recap email won't work** when clicked from
-  another device. Deploy the dashboard (Vercel works in 5 min for a
-  Next 16 app) and update the email template's CTA URL.
+  The Notion Meals schema only stores totals plus a comma-separated
+  `Items` text field, so the dashboard divides totals by item count
+  and labels the panel `ESTIMATED SPLIT`. Adding real per-ingredient
+  macros would mean a JSON column on Meals plus updates to meal-logger
+  and the meal-detail screen.
 
 ## Design credit
 
