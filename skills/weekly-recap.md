@@ -290,7 +290,7 @@ Substitute every `{{var}}` placeholder. Do not change the table/td/style structu
     {{suggestion_card_html}}
   </td></tr>
   <tr><td align="center" style="padding:0 28px 28px;">
-    <a href="{{dashboard_url}}" style="display:inline-block;padding:11px 22px;font-family:Menlo,Consolas,monospace;font-size:11px;color:#F3C747;text-decoration:none;letter-spacing:0.2em;text-transform:uppercase;border:1px solid #F3C747;border-radius:3px;">OPEN MISSION CONTROL →</a>
+    <a href="https://calorie-coach-dashboard.vercel.app" style="display:inline-block;padding:11px 22px;font-family:Menlo,Consolas,monospace;font-size:11px;color:#F3C747;text-decoration:none;letter-spacing:0.2em;text-transform:uppercase;border:1px solid #F3C747;border-radius:3px;">OPEN MISSION CONTROL →</a>
   </td></tr>
   <tr><td style="padding:16px 28px 20px;border-top:1px solid rgba(255,255,255,0.06);font-family:Menlo,Consolas,monospace;font-size:9px;color:#5A5957;letter-spacing:0.2em;">CALORIE COACH · MMXXVI</td></tr>
 </table>
@@ -311,7 +311,7 @@ Substitute every `{{var}}` placeholder. Do not change the table/td/style structu
 | `{{protein_delta_text}}` | `▼ {protein_gap}g short of {target_protein}g` or `▲ on target` |
 | `{{coach_note_html}}` | 1-2 sentence narrative naming `best_day` and `worst_day`. Wrap key numbers in colored spans: green `<span style="color:#4FA86B;">…</span>`, red `<span style="color:#CD5247;">…</span>`, yellow `<span style="color:#F3C747;">…</span>` |
 | `{{suggestion_card_html}}` | If a suggestion fires, render the YELLOW SUGGESTION CARD below. Otherwise render the GREEN NO-CHANGE CARD. |
-| `{{dashboard_url}}` | The dashboard URL (e.g. `http://localhost:3003` for local dev, or the deployed URL) |
+| (dashboard URL) | Hardcoded to `https://calorie-coach-dashboard.vercel.app` directly in the template's `<a href>` — no substitution needed. |
 
 **YELLOW SUGGESTION CARD** (when a suggestion fires):
 

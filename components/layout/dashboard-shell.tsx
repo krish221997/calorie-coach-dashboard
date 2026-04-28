@@ -12,7 +12,7 @@ const ROUTE_LABEL: Record<string, string> = {
   "/streaks": "STREAKS",
   "/delta": "DELTA · W/W",
   "/log": "TRANSCRIPT",
-  "/idle": "IDLE STATION",
+  "/station": "STATION",
 };
 
 function routeLabel(pathname: string): string {

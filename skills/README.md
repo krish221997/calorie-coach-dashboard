@@ -46,6 +46,11 @@ Both `weekly-recap` and `apply-targets` reference two Notion data sources. Their
 | Fat (g) | Number | |
 | Carbs (g) | Number | |
 | Updated At | Date | Set fresh on every PATCH |
+| Pending Field | Rich text | Written by `weekly-recap` when a suggestion fires (e.g. `"Protein (g)"`); cleared by `apply-targets` after YES/NO. |
+| Pending Value | Number | The proposed new value the recap suggested. |
+| Pending Reason | Rich text | One-sentence justification. |
+
+The three Pending columns are the durable bridge between `weekly-recap` and `apply-targets`. Each Telegram message arrives as a fresh agent session with no conversation history, so the recap stores its suggestion in Notion and the apply-targets skill reads it back. Without these columns, `YES` cannot work.
 
 ## Required One connections
 

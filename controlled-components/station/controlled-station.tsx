@@ -1,10 +1,10 @@
 import * as React from "react";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { IdleScreen } from "@/components/idle/idle-screen";
-import { StationActive } from "@/components/idle/station-active";
+import { IdleScreen } from "@/components/station/idle-screen";
+import { StationActive } from "@/components/station/station-active";
 import { loadDashboardData } from "@/lib/data/dashboard";
 
-export async function ControlledIdle() {
+export async function ControlledStation() {
   const data = await loadDashboardData();
   const hasEventsToday = data.todayMeals.length > 0;
 

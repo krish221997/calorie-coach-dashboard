@@ -28,7 +28,7 @@ The dashboard is read-only. All writes happen through the agent.
 | `/streaks` | **Streaks** | Apollo mission-clock, longest streak / log rate / avg meals, 90-day dot ledger |
 | `/delta` | **Delta** | This-week vs last-week metric cards, compare chart, best/worst day, narrative |
 | `/log` | **Transcript** | Filterable feed of all messages (text / photo / voice) with agent replies |
-| `/idle` | **Idle** | Empty-state when no events today; live "station active" view when there are |
+| `/station` | **Station** | Live "what's happening right now" view — empty-state when no events today, active feed when there are |
 | `/meal/[id]` | **Payload detail** | Per-meal payload, classification, ingredient split, transcript, keyboard nav (←/→/Esc) |
 
 ## Three skills
@@ -44,18 +44,70 @@ These live in `skills/` and are documented in detail at
 
 ## Setup
 
+The dashboard is just the read side. You still need (a) two Notion databases shaped a specific way, (b) an agent on One with three skills + five schedules + three connections. Walk through these in order:
+
+### 1. Create the two Notion databases
+
+Inside any Notion page, create two databases with the exact column names below. Names and types matter — the skills query them by name.
+
+**Meals** (one row per meal)
+
+| Property | Type |
+|---|---|
+| Meal | Title |
+| Timestamp | Date |
+| Meal Type | Select (`breakfast`, `lunch`, `snack`, `dinner`) |
+| Input Type | Select (`text`, `photo`, `voice`) |
+| Items | Rich text |
+| Raw Input | Rich text |
+| Transcript | Rich text |
+| kcal | Number |
+| Protein (g) | Number |
+| Fat (g) | Number |
+| Carbs (g) | Number |
+| Photo | Files (optional, reserved for future) |
+
+**Targets** (one active row holding daily goals)
+
+| Property | Type |
+|---|---|
+| Name | Title |
+| Active | Checkbox (only one row should be checked) |
+| Kcal | Number |
+| Protein (g) | Number |
+| Fat (g) | Number |
+| Carbs (g) | Number |
+| Updated At | Date |
+| Pending Field | Rich text |
+| Pending Value | Number |
+| Pending Reason | Rich text |
+
+Add one row to **Targets** with `Active = true` and your starting daily goals (e.g. 2200 kcal / 140g protein / 70g fat / 240g carbs). The three Pending columns stay empty — the weekly recap writes them when it has a suggestion, and apply-targets clears them after you reply YES/NO.
+
+Now grab each database's **data source ID**. Open the database as a full page in Notion, look at the URL: `notion.so/<title>-<HEX>?v=...` — the hex is the *database* ID. To get the *data source* ID (Notion's 2026-03-11 API distinguishes them), use the One CLI: `one --agent actions execute notion <retrieve-database-action> <connectionKey> --path-vars '{"databaseId":"<the-hex>"}'` and read `data_sources[0].id` off the response. Or query the database via the dashboard's `/api` route once `ONE_SECRET` is set.
+
+### 2. Configure the dashboard
+
 ```bash
 cp .env.example .env.local
 # fill in ONE_SECRET + the two NOTION_*_DATA_SOURCE_ID values
+# (NOTION_TARGETS_DATA_SOURCE_ID is optional — falls back to env-var defaults)
 
 npm install
 npm run dev
 # open http://localhost:3000
 ```
 
-Then paste the three skills from `skills/` into your One agent's skill
-panel. See `skills/README.md` for the schedule cron + Notion table
-schemas you'll need to set up.
+### 3. Set up the One agent
+
+At [app.withone.ai](https://app.withone.ai):
+
+- **Connections** — connect Notion, Gmail, Deepgram. Attach all three to the agent.
+- **Channels** — connect a Telegram bot.
+- **Skills** — paste the three files from `skills/` into the skills panel. **Before pasting**, find-and-replace `<NOTION_MEALS_DATA_SOURCE_ID>` and `<NOTION_TARGETS_DATA_SOURCE_ID>` in `weekly-recap.md` and `apply-targets.md` with your actual data source IDs from step 1.
+- **Schedules** — add the five rows listed in `skills/README.md`.
+
+That's it. Send a meal to your bot on Telegram, and the dashboard will show the row within seconds.
 
 ### Environment variables
 

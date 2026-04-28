@@ -14,7 +14,7 @@ const ITEMS: { href: string; label: string; sub: string }[] = [
   { href: "/streaks", label: "STREAKS", sub: "03" },
   { href: "/delta", label: "DELTA", sub: "04" },
   { href: "/log", label: "LOG", sub: "05" },
-  { href: "/idle", label: "IDLE", sub: "06" },
+  { href: "/station", label: "STATION", sub: "06" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
