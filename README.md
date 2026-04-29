@@ -14,6 +14,8 @@ The whole point of this build is what *isn't* in the repo:
 
 One handles all of it natively. The agent owns its scheduler (5 cron rows). The agent owns the Telegram channel (no relay needed). The agent owns the LLM calls (configure once, no SDK plumbing). The agent owns the integrations (Notion, Gmail, Deepgram — all native One connections). The agent's "skills" are three Markdown files pasted into the panel.
 
+Create your own at **[app.withone.ai/agents](https://app.withone.ai/agents)**.
+
 This dashboard reads from Notion via One's passthrough API using a single `ONE_SECRET` bearer, so no per-platform credentials live in this app either.
 
 ## What's in this repo
@@ -105,7 +107,7 @@ npm run dev
 
 ### 3. Set up the One agent
 
-At [app.withone.ai](https://app.withone.ai):
+Go to [app.withone.ai/agents](https://app.withone.ai/agents) and create a new agent. Then in the agent's panels:
 
 - **Connections** — connect Notion, Gmail, Deepgram. Attach all three to the agent.
 - **Channels** — connect a Telegram bot.
